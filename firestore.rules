@@ -1,0 +1,112 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+
+    function isPublished() {
+      return resource.data.status == 'published';
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // User creation on first login
+      allow create: if isOwner(userId)
+                    && request.resource.data.role == 'learner'
+                    && request.resource.data.email is string
+                    && request.resource.data.uid == userId;
+
+      // User update: cannot escalate role or tamper with sensitive fields
+      allow update: if isOwner(userId)
+                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isAdmin']))
+                    || isAdmin();
+
+      allow delete: if isOwner(userId) || isAdmin();
+
+      // Subcollections owned by user
+      match /{subcollection}/{docId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // Tracks
+    match /tracks/{trackId} {
+      allow read: if isPublished() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Units
+    match /units/{unitId} {
+      allow read: if isPublished() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Lessons
+    match /lessons/{lessonId} {
+      allow read: if isPublished() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Vocabulary
+    match /vocabulary/{wordId} {
+      allow read: if isPublished() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Exercises
+    match /exercises/{exerciseId} {
+      allow read: if isPublished() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Phrases
+    match /phrases/{phraseId} {
+      allow read: if isPublished() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Culture Notes
+    match /cultureNotes/{noteId} {
+      allow read: if isPublished() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Feedback
+    match /feedback/{feedbackId} {
+      allow create: if isAuthenticated() 
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.message is string
+                    && request.resource.data.message.size() <= 2000;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Global Stats (single aggregate document)
+    match /stats/{statId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Leaderboard
+    match /leaderboard/{weekId}/entries/{userId} {
+      allow read: if true;
+      allow create, update: if isOwner(userId)
+                            && request.resource.data.xp is number
+                            && request.resource.data.xp >= 0;
+      allow delete: if isAdmin();
+    }
+  }
+}
+

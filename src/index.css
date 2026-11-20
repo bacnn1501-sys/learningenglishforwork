@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Adjustable font scale classes */
+  html.font-scale-sm {
+    font-size: 14px;
+  }
+  html.font-scale-md {
+    font-size: 16px;
+  }
+  html.font-scale-lg {
+    font-size: 18px;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(185, 56, 21, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(185, 56, 21, 0.45);
+}
+
+/* Smooth card hover animations */
+.culinary-card-hover {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+.culinary-card-hover:hover {
+  transform: translateY(-2px);
+}
+
+/* Subtle pulse for voice mic */
+@keyframes micPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(185, 56, 21, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 16px rgba(185, 56, 21, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(185, 56, 21, 0);
+  }
+}
+.mic-recording {
+  animation: micPulse 1.5s infinite;
+}
+
